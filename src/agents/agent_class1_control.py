@@ -37,31 +37,34 @@ def class1_control_node(state: AgentState, config: RunnableConfig) -> AgentState
 
         if VFD == 1 and severity_bands.get('pressure_psi','Normal')=='Low':
             n_min, n_max = get_telemetry_normal_range('pressure_psi', asset_id)
+            n_mean = (n_min+n_max)/2
             current = telemetry.get('pressure_psi', n_min)
-            target = min(n_min*1.2, n_max) # move 20% above min normal_value
+            target = n_mean # move to mean value instead of min(n_min*1.2, n_max) # move 20% above min normal_value
             action_taken = (
                 f"set VFD control to increase pressure_psi\n"
-                f"from {current}-Low pressure to {target} (20% above min Normal value)."
+                f"from {current}-Low pressure to {target} (mean Normal value)."
             )
             logger.info("pressure increase is activated.")
             return {'action_taken': action_taken}
         if VFD==-1:
             if severity_bands.get('pressure_psi','Normal')=='High':
                 n_min, n_max = get_telemetry_normal_range('pressure_psi', asset_id)
+                n_mean = (n_min+n_max)/2
                 current = telemetry.get('pressure_psi', n_max)
-                target = max(n_max*0.8, n_min) # move 20% below max normal_value
+                target = n_mean # move to mean value instead of max(n_max*0.8, n_min) # move 20% below max normal_value
                 action_taken = (
                     f"set VFD control to decrease pressure_psi\n"
-                    f"from {current}-High pressure to {target} (20% below max Normal value)."
+                    f"from {current}-High pressure to {target} (mean Normal value)."
                 )
                 logger.info("pressure decrease is activated.")
             elif severity_bands.get('power_kw','Normal')=='High':
                 n_min, n_max = get_telemetry_normal_range('power_kw', asset_id)
+                n_mean = (n_min+n_max)/2
                 current = telemetry.get('power_kw', n_max)
-                target = max(n_max*0.8, n_min) # move 20% below max normal_value
+                target = n_mean # move to mean value instead of max(n_max*0.8, n_min) # move 20% below max normal_value
                 action_taken = (
                     f"set VFD control to decrease power_kw\n"
-                    f"from {current}-High power_kw to {target} (20% below max Normal value)."
+                    f"from {current}-High power_kw to {target} (mean Normal value)."
                 )
                 logger.info("power decrease is activated.")
             else:
