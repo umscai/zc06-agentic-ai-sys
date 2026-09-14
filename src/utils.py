@@ -130,7 +130,8 @@ def generate_test_case_data(
 def plot_test_case_telemetry(
     data: pd.DataFrame,
     df_config: pd.DataFrame,
-    title:str = 'Test Case A'
+    title:str = 'Test Case A',
+    test_point:bool=False
 ) -> None:
     """
     Plots time-series telemetry data with critical threshold lines if limits are breached.
@@ -139,6 +140,7 @@ def plot_test_case_telemetry(
         - data : The generated test case samples containing 'datetime' and parameter columns.
         - df_config : Configuration DataFrame containing parameter limits ('parameter', 'low_min', 'high_max').
         - title: figure title
+        -test_point: if True include first and last points with legend  test-point
     Returns:
         None
      Raises:
@@ -149,10 +151,15 @@ def plot_test_case_telemetry(
         fig, axs = plt.subplots(2, 2, figsize=(12, 8))
         fig.suptitle(title, fontsize=16, fontweight="bold", y=0.98)
         colors = sns.color_palette("Set1", n_colors=len(param_list))
+        if test_point:
+            test_points=data.iloc[[0, -1]]
 
         for ax, param, color in zip(axs.flatten(), param_list, colors):
             # 1. Plot the main telemetry line
-            sns.lineplot(data=data, x=data.index, y=param, ax=ax, color=color, linewidth=2, label=param, marker='s')
+            sns.lineplot(data=data, x=data.index, y=param, ax=ax, color=color, linewidth=2, label=param, marker='s', zorder=2)
+            if test_point:
+                sns.scatterplot(data=test_points, x=test_points.index, y=param, ax=ax, color='black', label='Test-Point', marker='*', s=200, zorder=3)
+
             ax.grid(True, linestyle="--", alpha=0.6)
             ax.set_xlabel('Index')
             #ax.legend()
@@ -183,10 +190,10 @@ def plot_test_case_telemetry(
                 #         linewidth=1.5,
                 #         label=f"Critical Min ({crit_min})",
                 #     )
-                ax.axhline(y=crit_min, color="crimson", linestyle="--", linewidth=1.5, label=f"Critical Min ({crit_min})")
+                ax.axhline(y=crit_min, color="crimson", linestyle="--", linewidth=1.5, label=f"Low Min ({crit_min})")
                 ax.axhline(y=n_min, color="forestgreen", linestyle="-.", linewidth=1.5, label=f"Normal Min ({n_min})")
                 ax.axhline(y=n_max, color="forestgreen", linestyle="-.", linewidth=1.5, label=f"Normal Max ({n_max})")
-                ax.axhline(y=crit_max, color="crimson", linestyle="--", linewidth=1.5, label=f"Critical Max ({crit_max})")
+                ax.axhline(y=crit_max, color="crimson", linestyle="--", linewidth=1.5, label=f"High Max ({crit_max})")
 
                 # if max_val > crit_max or :
                 #     ax.axhline(
@@ -203,6 +210,9 @@ def plot_test_case_telemetry(
     except Exception as e:
         logger.error(f"Error in plot_test_case_telemetry: {e}")
         raise
+
+#----------------------------------------------------------------------------------------
+
 #----------------------------------------------------------------------------------------
 @contextmanager
 def get_session_old1(engine: Engine):
