@@ -49,6 +49,7 @@ class AgentState(TypedDict):
 
 
     # Action Tracking & Control Execution
+    action_taken:str # reported action taken by agents at class-0, class-1, or class-2
     response:str # final response
     tool_used: List[str] | None
 

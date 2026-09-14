@@ -243,19 +243,31 @@ def get_session(engine: Engine):
         # Session is automatically closed here when exiting the outer 'with'
 
 #----------------------------------------------------------------------------------------
-def reset_and_setup_db(db_path: Path, base_cls: declarative_base):
+def init_and_setup_db(db_path: Path, base_cls: declarative_base, force_reset:bool=False):
     """
-    Reset and Create a new SQLite database at db_path using the provided Base metadata.
+    init and Create a new SQLite database at db_path using the provided Base metadata
+    reset before creating if force_reset=True
     Args:
         - db_path: path to dB
         - base_cls: declarative_base of the dB model
+        - force_reset: if True, reset existing dB and then init/setup, otherwise no action is taken
+    Returns:
+        None
+    Raises:
+        Exception: Re-raises any exception caught during processing after logging.
     """
     try:
-        db_path = Path(db_path)
         if db_path.exists():
-            db_path.unlink()
-            print(f"Existing database at {db_path} removed.")
+            if force_reset:
+                db_path.unlink()
+                print(f"Existing database at {db_path} removed.")
+            else:
+                print(f'database already exist at :{db_path} (no action is taken)')
+                return
+        else:
+            print(f'No database at {db_path}, Init and setup for the first time!')
 
+        db_path = Path(db_path)
         # Ensure parent folder exists
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -269,7 +281,7 @@ def reset_and_setup_db(db_path: Path, base_cls: declarative_base):
         table_names = inspector.get_table_names()
         print(f"Detected tables in {db_path}: {table_names}")
     except Exception as e:
-        logger.error(f"Error in xxx: {e}")
+        logger.error(f"Error in init_and_setup_db at {db_path} with force_reset={force_reset}: {e}")
         raise
 
 #----------------------------------------------------------------------------------------

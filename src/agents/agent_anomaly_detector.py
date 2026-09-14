@@ -49,7 +49,7 @@ def detect_anomaly_node(state: AgentState, config: RunnableConfig) -> AgentState
                 "root_cause_analysis": None,
                 "action": None,
                 "VFD": None,
-                "root_cause_analysis"
+                "action_taken": "",
                 "response": "", # update below
                 "tool_used":[], #TODO should we update with tools used by this node, even if it was not LLM that used the tool
                 "error": None
@@ -77,10 +77,12 @@ def detect_anomaly_node(state: AgentState, config: RunnableConfig) -> AgentState
                 "root_cause_analysis": None,
                 "action": None,
                 "VFD": None,
+                "action_taken": "",
                 "response": "",
                 "tool_used":[],
                 "error": None
             }
+            logger.warning(f"No Telemetry")
         return updates
     except Exception as e:
         logger.error(f"Error in detect_anomaly_node: {str(e)}")
@@ -98,6 +100,7 @@ def detect_anomaly_node(state: AgentState, config: RunnableConfig) -> AgentState
             "root_cause_analysis": None,
             "action": None,
             "VFD": None,
+            "action_taken": "",
             "response": "",
             "tool_used":[],
             "error":  str(e)

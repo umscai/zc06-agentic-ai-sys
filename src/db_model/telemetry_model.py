@@ -3,6 +3,8 @@ from sqlalchemy import Column, Integer, Float, String, Boolean, DateTime
 from sqlalchemy.orm import declarative_base
 from config import settings
 import utils as ut
+import logging
+logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -20,13 +22,24 @@ class TelemetryLog(Base):
 
     is_anomaly = Column(Boolean, nullable=False, default=False)
 
-# Sample Run
-# max@m223:~/x/zc06-agentic-ai$ uv run python -m src.db_model.telemetry_model
-# Existing database at /home/max/x/zc06-agentic-ai/out/db_telemetry/telemetry.db removed.
-# Database and tables created successfully.
-# Detected tables in /home/max/x/zc06-agentic-ai/out/db_telemetry/telemetry.db: ['telemetry_logs']
-# max@m223:~/x/zc06-agentic-ai$
-if __name__ == "__main__":
-    # Pass the Base containing TelemetryLog metadata
-    ut.reset_and_setup_db(settings.TELEMETRY_DIR / settings.TELEMETRY_DB, Base)
 
+
+def init_telemetry_db(force_reset:bool = False):
+    """
+    init and Create a new TELEMETRY SQLite database
+    Args:
+        - force_reset: if True, reset existing dB and then init/setup, otherwise no action is taken
+    Returns:
+        None
+    Raises:
+        Exception: Re-raises any exception caught during processing after logging.
+    """
+    try:
+        ut.init_and_setup_db(settings.TELEMETRY_DIR / settings.TELEMETRY_DB, Base, force_reset)
+    except Exception as e:
+        logger.error(f"Error in init_telemetry_db: {e}")
+        raise
+
+
+if __name__ == "__main__":
+    init_telemetry_db(force_reset=True)

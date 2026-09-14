@@ -6,6 +6,9 @@ from print_color import print
 #import pprint
 import utils as ut
 from orchestration.assistant import PumpAnomalyAssistant
+from db_model.ltm_model import init_ltm_db
+from db_model.telemetry_model import init_telemetry_db
+
 import time
 #------------------------------------------------------------------------------
 def main():
@@ -32,6 +35,11 @@ def main():
             result=assistant.run(asset_id, telemetry)
             if result.get('success',False):
                 state=result.get('state',{})
+                #msg = state.get('messages',[])
+                #print(f'{len(msg)}', tag='MSG-LEN', tag_color='yellow', color='white')
+                #tokens=assistant.llm.get_num_tokens_from_messages(msg)
+                #print(f'{tokens}', tag='TOKENS', tag_color='yellow', color='white')
+
                 is_anomaly = state.get('is_anomaly', False)
                 if is_anomaly:
                     anomaly_class= state.get('classification_class', '')
@@ -46,6 +54,8 @@ def main():
                     print(f"Anomaly: {anomaly_class}", tag='RESULT', tag_color='red', color='white')
                     print(f"{severity_bands}", tag='SEVERITY BANDS', tag_color='purple', color='yellow')
                     print(output)
+                    print('-'*100)
+                    print(f"{state.get('response')}")
                 else:
                     print(f"Not Anomaly", tag='RESULT', tag_color='green', color='white')
 
@@ -55,4 +65,8 @@ def main():
 
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
+    print('Telemetry', tag='Check-dB', tag_color='cyan', color='yellow')
+    init_telemetry_db()
+    print('LTM', tag='Check-dB', tag_color='cyan', color='yellow')
+    init_ltm_db()
     main()
