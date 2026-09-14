@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     MODEL_NAME: str   #=  'MODEL_NAME' # will load MODEL_NAME from .env
     OPENAI_API_KEY: str #= 'OPENAI_API_KEY' # will load OPENAI_API_KEY from .env
+    OPENAI_BASE_URL: str # # will load OPENAI_API_KEY from .env
     TEMPERATURE: float # = 0.0 # will load TEMPERATURE from .env and convert to float
     #
     TELEMETRY_PARAM_LIST:list[str] = ["temperature_c", "vibration_hz", "pressure_psi", "power_kw"]

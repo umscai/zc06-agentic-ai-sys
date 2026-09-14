@@ -17,12 +17,13 @@ class PumpAnomalyAssistant:
         api_key: str = settings.OPENAI_API_KEY,
         model_name: str = settings.MODEL_NAME,
         temperature: float = settings.TEMPERATURE,
+        base_url: str = settings.OPENAI_BASE_URL
     ):
         # Initialize LLM
 
         try:
             #ChatOpenAI(api_key=settings.OPENAI_API_KEY, model=settings.MODEL_NAME)
-            self.llm = ChatOpenAI(model=model_name, temperature=temperature, api_key=api_key)
+            self.llm = ChatOpenAI(model=model_name, temperature=temperature, api_key=api_key, base_url=base_url)
         except Exception as e:
             raise RuntimeError(f"LLM Initialization failed: {e}")
 
