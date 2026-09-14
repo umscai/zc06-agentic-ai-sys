@@ -22,16 +22,22 @@ def class2_escalate_node(state: AgentState, config: RunnableConfig) -> AgentStat
         root_cause_analysis= state.get('root_cause_analysis', 'Unknown')
         action = state.get('action', 'Full system check')
 
+        # possible detail info on work-order
+        # action_taken = (
+        #     f"High Priority Task for On-Site Field Reliability Engineering: \n"
+        #     f"Class-2 Anomaly detected on Asset-{asset_id} at: {telemetry_timestamp_str}\n"
+        #     f"Telemetry: {telemetry}\n"
+        #     f"severity_bands: {severity_bands}\n"
+        #     f"primary_failure_mode: {primary_failure_mode}\n"
+        #     f"root_cause_analysis: {root_cause_analysis}\n"
+        #     f"suggested action: {action}\n"
+        #     f"Please follow standard guideline, and procedure for inspection, and repair/fix"
+        # )
         action_taken = (
-            f"High Priority Task for On-Site Field Reliability Engineering: \n"
-            f"Class-2 Anomaly detected on Asset-{asset_id} at: {telemetry_timestamp_str}\n"
-            f"Telemetry: {telemetry}\n"
-            f"severity_bands: {severity_bands}\n"
-            f"primary_failure_mode: {primary_failure_mode}\n"
-            f"root_cause_analysis: {root_cause_analysis}\n"
-            f"suggested action: {action}\n"
-            f"Please follow standard guideline, and procedure for inspection, and repair/fix"
+            f"Work-Order with High Priority sent to On-Site Field Reliability Engineering.\n"
+            f"All details included in the work-order."
         )
+
         logger.info(f"Escalate to on-site engineer is activated")
         return {'action_taken': action_taken}
     except Exception as e:

@@ -56,7 +56,7 @@ def class1_control_node(state: AgentState, config: RunnableConfig) -> AgentState
                 )
                 logger.info("pressure decrease is activated.")
             elif severity_bands.get('power_kw','Normal')=='High':
-                n_min, n_max = get_telemetry_normal_range('pressure_psi', asset_id)
+                n_min, n_max = get_telemetry_normal_range('power_kw', asset_id)
                 current = telemetry.get('power_kw', n_max)
                 target = max(n_max*0.8, n_min) # move 20% below max normal_value
                 action_taken = (

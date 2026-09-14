@@ -24,7 +24,7 @@ def main():
     logger.info(f"Running test case-{test_case_id} for asset-id:{asset_id} with {num_samples} samples.")
 
     #print(f"Running test-case-{test_case_id} for asset-id:{asset_id} with {num_samples} samples.")
-    print(f"Test-case-{test_case_id} for asset-id:{asset_id} with {num_samples} samples.", tag='Running', tag_color='cyan', color='yellow')
+    print(f"Test-case-{test_case_id} for asset-id:{asset_id} with {num_samples} samples.", tag='Running', tag_color='cyan', color='green')
     logger.debug({"msg": "init","status":"success"})
     try:
         assistant = PumpAnomalyAssistant()
@@ -43,18 +43,18 @@ def main():
                 is_anomaly = state.get('is_anomaly', False)
                 if is_anomaly:
                     anomaly_class= state.get('classification_class', '')
-                    severity_bands= state.get('severity_bands',{})
-                    output={
-                        'failure': state.get('primary_failure_mode', ''),
-                        'root_cause':state.get('root_cause_analysis', ''),
-                        'action': state.get('action', ''),
-                        'confidence': state.get('confidence', ''),
-                        'VFD': state.get('VFD', 0),
-                    }
+                    # severity_bands= state.get('severity_bands',{})
+                    # output={
+                    #     'failure': state.get('primary_failure_mode', ''),
+                    #     'root_cause':state.get('root_cause_analysis', ''),
+                    #     'action': state.get('action', ''),
+                    #     'confidence': state.get('confidence', ''),
+                    #     'VFD': state.get('VFD', 0),
+                    # }
                     print(f"Anomaly: {anomaly_class}", tag='RESULT', tag_color='red', color='white')
-                    print(f"{severity_bands}", tag='SEVERITY BANDS', tag_color='purple', color='yellow')
-                    print(output)
-                    print('-'*100)
+                    #print(f"{severity_bands}", tag='SEVERITY BANDS', tag_color='purple', color='yellow')
+                    #print(output)
+                    #print('-'*100)
                     print(f"{state.get('response')}")
                 else:
                     print(f"Not Anomaly", tag='RESULT', tag_color='green', color='white')
@@ -69,4 +69,5 @@ if __name__ == "__main__":
     init_telemetry_db()
     print('LTM', tag='Check-dB', tag_color='cyan', color='yellow')
     init_ltm_db()
+    print('+'*100)
     main()

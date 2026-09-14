@@ -19,7 +19,7 @@ def class0_shutdown_node(state: AgentState, config: RunnableConfig) -> AgentStat
                 f"All parties are informed including standard guidelines and procedures."
             )
         logger.info(f"shutdown procedure is activated")
-        logger.debug(f"XXX shutdown procedure is activated: action taken={action_taken}")
+        #logger.debug(f"XXX shutdown procedure is activated: action taken={action_taken}")
         return {'action_taken': action_taken}
     except Exception as e:
         logger.error(f"Error in class0_shutdown_node: {str(e)}")
