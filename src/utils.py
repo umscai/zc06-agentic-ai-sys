@@ -20,7 +20,7 @@ from config import settings
 
 #
 from sqlalchemy import create_engine, Engine, inspect
-# from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session, declarative_base
@@ -257,6 +257,7 @@ def init_and_setup_db(db_path: Path, base_cls: declarative_base, force_reset:boo
         Exception: Re-raises any exception caught during processing after logging.
     """
     try:
+        db_path = Path(db_path)
         if db_path.exists():
             if force_reset:
                 db_path.unlink()
@@ -267,7 +268,6 @@ def init_and_setup_db(db_path: Path, base_cls: declarative_base, force_reset:boo
         else:
             print(f'No database at {db_path}, Init and setup for the first time!')
 
-        db_path = Path(db_path)
         # Ensure parent folder exists
         db_path.parent.mkdir(parents=True, exist_ok=True)
 

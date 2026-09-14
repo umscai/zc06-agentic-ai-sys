@@ -11,6 +11,9 @@ from agents.agent_class1_control import class1_control_node
 from agents.agent_class2_escalate import class2_escalate_node
 from agents.agent_ltm_update import ltm_update_node
 from config import settings
+import logging
+logger = logging.getLogger(__name__)
+
 
 
 def route_after_anomaly(state: AgentState) -> str:
@@ -74,18 +77,47 @@ def build_pump_anomaly_workflow() -> CompiledStateGraph:
 # Single pre-compiled workflow instance
 #pump_anomaly_graph = build_pump_anomaly_workflow()
 
-# Sample run
-# max@m223:~/x/zc06-agentic-ai$ uv run python -m src.orchestration.graph
-# Graph successfully rendered and saved to /home/max/x/zc06-agentic-ai/report/latex/img/workflow_graph.png
-# max@m223:~/x/zc06-agentic-ai$
+
+#----------------------------------------------------------------------------------------
+def init_checkpoint_db(force_reset:bool=False):
+    """
+    init and Create a new SQLite database for checkpoint by building the graph
+    reset before creating if force_reset=True (also generate graph PNG)
+    Args:
+        - force_reset: if True, reset existing dB and then init/setup, otherwise no action is taken
+    Returns:
+        None
+    Raises:
+        Exception: Re-raises any exception caught during processing after logging.
+    """
+    try:
+        db_path = settings.CHECKPOINT_DIR / settings.CHECKPOINT_DB
+        if db_path.exists():
+            if force_reset:
+                db_path.unlink()
+                print(f"Existing database at {db_path} removed.")
+            else:
+                print(f'database already exist at :{db_path} (no action is taken)')
+                return
+        else:
+            print(f'No database at {db_path}, Init and setup for the first time!')
+
+        # Ensure parent folder exists
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+
+        pump_anomaly_graph = build_pump_anomaly_workflow()
+        print("LanGraph Checkpoint Database created successfully.")
+
+        # Also Generate graph PNG image
+        path = settings.IMG_DIR / settings.WORKFLOW_GRAPH
+        png_bytes = pump_anomaly_graph.get_graph().draw_mermaid_png()
+        with open(path, "wb") as f:
+            f.write(png_bytes)
+        print(f"Graph successfully rendered and saved to {path}")
+    except Exception as e:
+        logger.error(f"Error in init_checkpoint_db at {db_path} with force_reset={force_reset}: {e}")
+        raise
+
+
 if __name__ == "__main__":
-    pump_anomaly_graph = build_pump_anomaly_workflow()
-    path = settings.IMG_DIR / settings.WORKFLOW_GRAPH
-    settings.IMG_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Generate graph PNG image
-    png_bytes = pump_anomaly_graph.get_graph().draw_mermaid_png()
-    with open(path, "wb") as f:
-        f.write(png_bytes)
-    print(f"Graph successfully rendered and saved to {path}")
-
+    init_checkpoint_db(force_reset=True)

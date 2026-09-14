@@ -8,6 +8,7 @@ import utils as ut
 from orchestration.assistant import PumpAnomalyAssistant
 from db_model.ltm_model import init_ltm_db
 from db_model.telemetry_model import init_telemetry_db
+from orchestration.graph import init_checkpoint_db
 
 import time
 #------------------------------------------------------------------------------
@@ -69,5 +70,7 @@ if __name__ == "__main__":
     init_telemetry_db()
     print('LTM', tag='Check-dB', tag_color='cyan', color='yellow')
     init_ltm_db()
+    print('Checkpoint', tag='Check-dB', tag_color='cyan', color='yellow')
+    init_checkpoint_db()
     print('+'*100)
     main()
