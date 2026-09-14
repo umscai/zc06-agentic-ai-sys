@@ -1,4 +1,4 @@
-asset_index,parameter,critical_min,normal_min,normal_max,critical_max,start1,end1,start2,end2,start3,end3,start4,end4
+asset_index,parameter,low_min,normal_min,normal_max,high_max,start1,end1,start2,end2,start3,end3,start4,end4
 1,temperature_c,40,48,62,80,50,95,50,79,50,71,50,61
 1,vibration_hz,15,20,32,44,20,33,20,33,20,33,20,33
 1,pressure_psi,80,111,130,160,110,125,110,125,110,125,110,125

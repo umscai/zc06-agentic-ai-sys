@@ -33,7 +33,7 @@ def class2_escalate_node(state: AgentState, config: RunnableConfig) -> AgentStat
             f"Please follow standard guideline, and procedure for inspection, and repair/fix"
         )
         logger.info(f"Escalate to on-site engineer is activated")
-        return state
+        return {'action_taken': action_taken}
     except Exception as e:
         logger.error(f"Error in class2_escalate_node: {str(e)}")
         action_taken = (

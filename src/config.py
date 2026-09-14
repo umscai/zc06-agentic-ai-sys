@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     #
     ASSET_TEST_CASE_INFO_CSV:str = 'test_case_and_asset_info.csv'
-    ASSET_TEST_CASE_COL_LIST:list[str] = ['parameter', 'critical_min', 'normal_min', 'normal_max', 'critical_max', 'start', 'end']
+    ASSET_TEST_CASE_COL_LIST:list[str] = ['parameter', 'low_min', 'normal_min', 'normal_max', 'high_max', 'start', 'end']
 
 
     TELEMETRY_DB:str = 'telemetry.db'
@@ -224,7 +224,7 @@ def get_args():
         help="The storage format for the logs"
     )
     parser.add_argument(
-        "-i", "--id",
+        "-a", "--asset",
         type=int,
         choices=[1, 2, 3],
         default=1,
@@ -239,7 +239,7 @@ def get_args():
     )
 
     parser.add_argument(
-        "-n", "--number",
+        "-s", "--samples",
         type=int,
         default=1,
         help="Number of telemetry samples to generate and inject to system(default: 1)"

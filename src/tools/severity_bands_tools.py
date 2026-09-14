@@ -21,7 +21,7 @@ def get_severity_bands(telemetry: dict[str, float], asset_id:int=1)-> dict[str,s
     """
     try:
         df_anomaly_range = ut.get_asset_test_case(asset_index=asset_id, test_case_index=1)
-        #['parameter', 'critical_min', 'normal_min', 'normal_max', 'critical_max', 'start', 'end']
+        #['parameter', 'low_min', 'normal_min', 'normal_max', 'high_max', 'start', 'end']
 
         parameters = settings.TELEMETRY_PARAM_LIST #["temperature_c", "vibration_hz", "pressure_psi", "power_kw"]
         severity_bands = {}
@@ -38,15 +38,15 @@ def get_severity_bands(telemetry: dict[str, float], asset_id:int=1)-> dict[str,s
 
             row = param_row.iloc[0]
 
-            if val <= row["critical_min"]:
+            if val <= row["low_min"]:
                 severity_bands[param] = "Critically_Low"
-            elif row["critical_min"] < val < row["normal_min"]:
+            elif row["low_min"] < val < row["normal_min"]:
                 severity_bands[param] = "Low"
             elif row["normal_min"] <= val <= row["normal_max"]:
                 severity_bands[param] = "Normal"
-            elif row["normal_max"] < val < row["critical_max"]:
+            elif row["normal_max"] < val < row["high_max"]:
                 severity_bands[param] = "High"
-            elif row["critical_max"] <= val:
+            elif row["high_max"] <= val:
                 severity_bands[param] = "Critically_High"
             else: # should not happen!
                 severity_bands[param] = "Out_of_Range"
@@ -76,7 +76,7 @@ def get_telemetry_normal_range(telemetry_name: str, asset_id:int=1)-> tuple[floa
     try:
         normal_min, normal_max = None, None
         df_anomaly_range = ut.get_asset_test_case(asset_index=asset_id, test_case_index=1)
-        #['parameter', 'critical_min', 'normal_min', 'normal_max', 'critical_max', 'start', 'end']
+        #['parameter', 'low_min', 'normal_min', 'normal_max', 'high_max', 'start', 'end']
 
         parameters = settings.TELEMETRY_PARAM_LIST #["temperature_c", "vibration_hz", "pressure_psi", "power_kw"]
         if telemetry_name in parameters:

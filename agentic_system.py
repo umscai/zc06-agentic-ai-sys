@@ -13,9 +13,9 @@ import time
 #------------------------------------------------------------------------------
 def main():
     args=get_args()
-    asset_id = args.id
+    asset_id = args.asset
     test_case_id = args.test
-    num_samples = args.number
+    num_samples = args.samples
     _ = CustomLogger(log_dir=settings.LOG_DIR, save_format=args.format,verbose=args.verbose)
     logger = logging.getLogger(__name__)
 

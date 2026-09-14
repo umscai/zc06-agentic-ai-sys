@@ -137,7 +137,7 @@ def plot_test_case_telemetry(
 
     Args:
         - data : The generated test case samples containing 'datetime' and parameter columns.
-        - df_config : Configuration DataFrame containing parameter limits ('parameter', 'critical_min', 'critical_max').
+        - df_config : Configuration DataFrame containing parameter limits ('parameter', 'low_min', 'high_max').
         - title: figure title
     Returns:
         None
@@ -163,8 +163,8 @@ def plot_test_case_telemetry(
             # 3. Lookup parameter threshold limits from config DataFrame
             config_row = df_config[df_config["parameter"] == param]
             if not config_row.empty:
-                crit_min = config_row["critical_min"].values[0]
-                crit_max = config_row["critical_max"].values[0]
+                crit_min = config_row["low_min"].values[0]
+                crit_max = config_row["high_max"].values[0]
 
                 n_min = config_row["normal_min"].values[0]
                 n_max = config_row["normal_max"].values[0]
