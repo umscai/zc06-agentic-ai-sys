@@ -118,7 +118,7 @@ class Settings(BaseSettings):
 # Create a single instance to be used everywhere
 settings = Settings()
 settings.create_directories()
-settings.check_all_db_exist()
+#settings.check_all_db_exist()
 
 
 #------------------------------------------------------------------------------

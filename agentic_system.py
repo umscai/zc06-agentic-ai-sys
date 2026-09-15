@@ -14,6 +14,14 @@ import time
 #------------------------------------------------------------------------------
 def main():
     args=get_args()
+    print('Telemetry', tag='Check-dB', tag_color='cyan', color='yellow')
+    init_telemetry_db()
+    print('LTM', tag='Check-dB', tag_color='cyan', color='yellow')
+    init_ltm_db()
+    print('Checkpoint', tag='Check-dB', tag_color='cyan', color='yellow')
+    init_checkpoint_db()
+    print(f'{settings.USE_CONTEXT}', tag='Use LTM as Context', tag_color='cyan', color='red')
+    print('+'*100)
     asset_id = args.asset
     test_case_id = args.test
     num_samples = args.samples
@@ -67,12 +75,5 @@ def main():
 
 #------------------------------------------------------------------------------
 if __name__ == "__main__":
-    print('Telemetry', tag='Check-dB', tag_color='cyan', color='yellow')
-    init_telemetry_db()
-    print('LTM', tag='Check-dB', tag_color='cyan', color='yellow')
-    init_ltm_db()
-    print('Checkpoint', tag='Check-dB', tag_color='cyan', color='yellow')
-    init_checkpoint_db()
-    print(f'{settings.USE_CONTEXT}', tag='Use LTM as Context', tag_color='cyan', color='red')
-    print('+'*100)
+
     main()
