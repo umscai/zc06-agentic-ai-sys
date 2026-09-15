@@ -6,7 +6,8 @@ from sqlalchemy import create_engine, inspect
 
 from config import settings
 from orchestration.graph import build_pump_anomaly_workflow
-
+import logging
+logger = logging.getLogger(__name__)
 
 class GetWorkflowAnalytics:
     """Get and plot token usage, tool usage, func usage, and confidence scores of Assets."""
@@ -169,6 +170,25 @@ class GetWorkflowAnalytics:
         plt.savefig(settings.IMG_DIR / "confidence_distribution.png", dpi=300)
         plt.show()
 
+
+def get_checkpoint_df()->pd.DataFrame:
+    """
+    get checkpoint-dB data in data-frame format
+    Args:
+        - None
+    Returns:
+        pandas dataframe contains telemetry log
+    Raises:
+        Exception: Re-raises any exception caught during processing after logging.
+    """
+    try:
+        table_name = 'checkpoints'
+        engine = create_engine(f"sqlite:///{settings.CHECKPOINT_DIR / settings.CHECKPOINT_DB}", echo=False)
+        df = pd.read_sql_table(table_name, engine)
+        return df
+    except Exception as e:
+        logger.error(f"Error in get_ltm_df: {e}")
+        raise
 
 if __name__ == "__main__":
     analytics = GetWorkflowAnalytics()
