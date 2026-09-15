@@ -26,6 +26,7 @@ def ltm_update_node(state: AgentState, config: RunnableConfig) -> AgentState:
         action = state.get('action', 'Full system check')
         classification_class = state.get('classification_class', 'Unknown')
         action_taken = state.get('action_taken', 'Unknown')
+        confidence = state.get('confidence', 0)
 
 
         log_id= log_anomaly(
@@ -42,11 +43,12 @@ def ltm_update_node(state: AgentState, config: RunnableConfig) -> AgentState:
             f"Severity Bands: {severity_bands}\n"
             f"Failure: {primary_failure_mode}\n"
             f"Root Cause: {root_cause_analysis}\n"
+            f"Confidence: {confidence}\n"
             f"Suggested Action: {action}\n"
             f"Action Taken: {action_taken}"
         )
 
-        return {'response': final_response}
+        return {'response': final_response, "func_used":['log_anomaly'],}
     except Exception as e:
         logger.error(f"Error in ltm_update_node: {str(e)}")
         return {'response': 'Internal Error', "error":  str(e)}

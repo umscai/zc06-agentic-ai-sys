@@ -51,7 +51,8 @@ def detect_anomaly_node(state: AgentState, config: RunnableConfig) -> AgentState
                 "VFD": None,
                 "action_taken": "",
                 "response": "", # update below
-                "tool_used":[], #TODO should we update with tools used by this node, even if it was not LLM that used the tool
+                "tool_used":[],
+                "func_used":['detect_anomaly', 'log_telemetry'],
                 "error": None
             }
             # Here there is no user-message, ai-message or system-message that need to be added to messages
@@ -80,6 +81,7 @@ def detect_anomaly_node(state: AgentState, config: RunnableConfig) -> AgentState
                 "action_taken": "",
                 "response": "",
                 "tool_used":[],
+                "func_used":[],
                 "error": None
             }
             logger.warning(f"No Telemetry")
@@ -103,6 +105,7 @@ def detect_anomaly_node(state: AgentState, config: RunnableConfig) -> AgentState
             "action_taken": "",
             "response": "",
             "tool_used":[],
+            "func_used":[],
             "error":  str(e)
         }
         return updates

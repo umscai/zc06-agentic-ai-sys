@@ -56,6 +56,7 @@ def main():
                     #print(f"{severity_bands}", tag='SEVERITY BANDS', tag_color='purple', color='yellow')
                     #print(output)
                     #print('-'*100)
+                    #print(state.get('context',''))
                     print(f"{state.get('response')}")
                 else:
                     print(f"Not Anomaly", tag='RESULT', tag_color='green', color='white')

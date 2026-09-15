@@ -6,6 +6,7 @@ from langgraph.graph.message import add_messages # or we could use from langgrap
 from langchain.agents import create_agent
 import json
 from typing import Any
+import operator
 import logging
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,10 @@ class AgentState(TypedDict):
     # Action Tracking & Control Execution
     action_taken:str # reported action taken by agents at class-0, class-1, or class-2
     response:str # final response
-    tool_used: List[str] | None
+    tool_used: List[str] | None  # tool used by LLM
+    #func_used: List[str] | None  # tool/func used by node in workflow-graph for analytic purpose
+    # Use operator.add so node outputs append to the list instead of replacing it
+    func_used: Annotated[List[str], operator.add]
 
     #
     error: str | None # in case of node error

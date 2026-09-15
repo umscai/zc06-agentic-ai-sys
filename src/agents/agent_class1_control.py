@@ -45,7 +45,7 @@ def class1_control_node(state: AgentState, config: RunnableConfig) -> AgentState
                 f"from {current}-Low pressure to {target} (mean Normal value)."
             )
             logger.info("pressure increase is activated.")
-            return {'action_taken': action_taken}
+            return {'action_taken': action_taken, "func_used":['get_telemetry_normal_range']}
         if VFD==-1:
             if severity_bands.get('pressure_psi','Normal')=='High':
                 n_min, n_max = get_telemetry_normal_range('pressure_psi', asset_id)
@@ -57,6 +57,7 @@ def class1_control_node(state: AgentState, config: RunnableConfig) -> AgentState
                     f"from {current}-High pressure to {target} (mean Normal value)."
                 )
                 logger.info("pressure decrease is activated.")
+                return {'action_taken': action_taken, "func_used":['get_telemetry_normal_range']}
             elif severity_bands.get('power_kw','Normal')=='High':
                 n_min, n_max = get_telemetry_normal_range('power_kw', asset_id)
                 n_mean = (n_min+n_max)/2
@@ -67,6 +68,7 @@ def class1_control_node(state: AgentState, config: RunnableConfig) -> AgentState
                     f"from {current}-High power_kw to {target} (mean Normal value)."
                 )
                 logger.info("power decrease is activated.")
+                return {'action_taken': action_taken, "func_used":['get_telemetry_normal_range']}
             else:
                 action_taken = (
                     f"Expect Low/High pressure_psi or High power_kw for VFD control\n"
@@ -74,7 +76,7 @@ def class1_control_node(state: AgentState, config: RunnableConfig) -> AgentState
                     f"No action is taken, wait for next evaluation."
                 )
                 logger.warning(f"Invalid scenario with VFD=-1 route to class-1:severity-bands={severity_bands}")
-            return {'action_taken': action_taken}
+                return {'action_taken': action_taken}
 
     except Exception as e:
         logger.error(f"Error in class1_control_node: {str(e)}")
