@@ -38,7 +38,7 @@ class ClassificationOutput(BaseModel):
 # ------------------------------------------------------------------------------
 # Prompt Design
 # ------------------------------------------------------------------------------
-CLASSIFICATION_PROMPT6 = """
+CLASSIFICATION_PROMPT7 = """
 You are an Industrial Anomaly & Incident Response Agent monitoring a Multistage Centrifugal Water Pump.
 
 ### Operational Context
@@ -48,7 +48,7 @@ Telemetry: {telemetry}
 Context: {context}
 
 ### Instructions
-1. Call `get_severity_bands` using the provided telemetry and asset_id.
+1. Call `get_severity_bands` using ALL fields present in the provided telemetry and asset_id. Do not omit any parameter.
 2. Evaluate the returned severity bands against the following logic rules (in order of priority):
 
 #### Logic Rules:
@@ -88,7 +88,7 @@ Context: {context}
     - neither in CLASS_0, nor class_1, assign to CLASS_2 with VFD=0
 """
 
-CLASSIFICATION_PROMPT= CLASSIFICATION_PROMPT6
+CLASSIFICATION_PROMPT= CLASSIFICATION_PROMPT7
 
 CLASSIFICATION_PROMPT_TEMPLATE = PromptTemplate(
     input_variables=["asset_id", "timestamp", "telemetry", "context"],

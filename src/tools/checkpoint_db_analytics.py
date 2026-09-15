@@ -126,7 +126,7 @@ class GetWorkflowAnalytics:
         tool_counts = pd.Series(all_tools).value_counts(sort=True, ascending=True)
 
         tool_counts.plot(kind="barh", color="#2ecc71", figsize=(8, 5))
-        plt.title("Most Frequently Called Tools")
+        plt.title("AI-Agent Tool Usage Count")
         plt.xlabel("Total Number of Invocations")
         plt.tight_layout()
         plt.savefig(settings.IMG_DIR / "tool_usage.png", dpi=300)
@@ -144,7 +144,7 @@ class GetWorkflowAnalytics:
         func_counts = pd.Series(all_funcs).value_counts(sort=True, ascending=True)
 
         func_counts.plot(kind="barh", color="#9b59b6", figsize=(8, 5))
-        plt.title("Most Frequently Used Node Functions")
+        plt.title("Node Functions Usage Count")
         plt.xlabel("Total Number of Executions")
         plt.tight_layout()
         plt.savefig(settings.IMG_DIR / "func_usage.png", dpi=300)
@@ -175,4 +175,4 @@ if __name__ == "__main__":
     analytics.plot_token_usage_per_aid()
     analytics.plot_tool_usage_count()
     analytics.plot_func_usage_count()
-    analytics.plot_confidence_distribution()
+    #analytics.plot_confidence_distribution()

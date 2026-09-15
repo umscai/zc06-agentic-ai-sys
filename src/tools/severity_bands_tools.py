@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 #----------------------------------------------------------------------------------------
 @tool
-def get_severity_bands(telemetry: dict[str, float], asset_id:int=1)-> dict[str,str]:
+def get_severity_bands(telemetry: dict[str, float], asset_id)-> dict[str,str]:
     """
     Classifies telemetry values into categories compared to Normal Range of operation as:
     Critically_Low, Low, Normal, High, and Critically_High
@@ -51,15 +51,23 @@ def get_severity_bands(telemetry: dict[str, float], asset_id:int=1)-> dict[str,s
             else: # should not happen!
                 severity_bands[param] = "Out_of_Range"
 
+        logging_dict = {
+            "asset_id": asset_id,
+            "telemetry": telemetry,
+            "severity_bands": severity_bands,
+        }
+        #print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+        #print(logging_dict)
+        logger.info(logging_dict)
         return severity_bands
     except Exception as e:
         logger.error(f"Error in get_severity_bands: {e}")
-        # On exception we set all to Low, to go for logging and next sample analysis (no interruption for agent workflow)
+        # On exception we set all to High, to escalate to on-site engineer
         return{
-            'temperature_c':'Low',
-            'vibration_hz': 'Low',
-            'pressure_psi': 'Low',
-            'power_kw': 'Low',
+            'temperature_c':'High',
+            'vibration_hz': 'High',
+            'pressure_psi': 'High',
+            'power_kw': 'High',
         }
 
 
