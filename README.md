@@ -1,8 +1,19 @@
 # Agentic System
-TBC
+
+This project introduces a **LangGraph-driven agentic system** that automatically categorizes anomalies in industrial telemetry data (such as a Multistage Centrifugal Water Pump) and triggers downstream actions. Powered by a central LLM at the classifier node, the agent provides **failure modes, root-cause analyses, and recommended actions** across three action tiers:
+
+* **Class 0 (Immediate Shutdown):** Critical threats or catastrophic failures.
+* **Class 1 (Automated Control Adjust):** Moderate, single-metric drift managed via automated control.
+* **Class 2 (Field Engineer Dispatch):** High-severity mechanical degradation or multi-metric anomaly combinations.
+
+**Key Technical Approach**
+
+1. **Target Telemetry:** Monitored across four variables—Temperature (`temperature_c`), Vibration (`vibration_hz`), Pressure (`pressure_psi`), and Power (`power_kw`).
+2. **Deterministic Pre-Processing Over Raw Stats:** Instead of forcing the LLM to interpret raw numbers or statistical deviations (which risks hallucination due to non-linear severity curves), a dedicated tool maps values directly to document-backed severity bands (`Critically_Low` to `Critically_High`).
+3. **Streamlined Architecture:** Replaces heavy RAG pipelines with targeted threshold lookup tools to give the LLM unambiguous domain context for reliable classification (Each Telemetry mapped to '`Critically_Low`, `Low`, `Normal`, `High` or `Critically_High`, based on clear threshold defined for each asset).
 
 
-__[PDF Report](./report/report.pdf)__
+__[PDF Report](./report/Agentic_AI_System_Design_Report.pdf)__
 
 ## How to run the project
 - GitHub Link: https://github.com/umscai/zc06-agentic-ai-sys
@@ -72,7 +83,7 @@ Project folder and file structures are shown below, where `agentic_system.py` is
 ├── report
 │   ├── latex
 │   │   └── img
-│   ├── report.pdf
+│   ├── Agentic_AI_System_Design_Report.pdf
 │   └── test_result.html
 ├── requirements.txt
 ├── sample.env
