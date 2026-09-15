@@ -73,5 +73,6 @@ if __name__ == "__main__":
     init_ltm_db()
     print('Checkpoint', tag='Check-dB', tag_color='cyan', color='yellow')
     init_checkpoint_db()
+    print(f'{settings.USE_CONTEXT}', tag='Use LTM as Context', tag_color='cyan', color='red')
     print('+'*100)
     main()

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str #= 'OPENAI_API_KEY' # will load OPENAI_API_KEY from .env
     OPENAI_BASE_URL: str # # will load OPENAI_API_KEY from .env
     TEMPERATURE: float # = 0.0 # will load TEMPERATURE from .env and convert to float
+    USE_CONTEXT:bool #will load USE_CONTEXT from .env and convert to boolean
     #
     TELEMETRY_PARAM_LIST:list[str] = ["temperature_c", "vibration_hz", "pressure_psi", "power_kw"]
     NORMAL_Z_SCORE_MAX:float = 3.0 # we assume normal min-max  range is 6-sigma range with mean in the middle

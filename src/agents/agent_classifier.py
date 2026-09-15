@@ -9,6 +9,7 @@ from agents.agent_common import AgentState, invoke_react_agent, SeverityBand
 from tools.severity_bands_tools import get_severity_bands
 from tools.ltm_db_tools import get_anomaly_history, format_anomaly_context
 from utils import get_val
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +117,13 @@ def classifier_node(state: AgentState, config: RunnableConfig) -> AgentState:
 
         # Long-Term Memory / Context placeholder
         #context = state.get("context", "")
-        history_list = get_anomaly_history(asset_id=str(state.get("asset_id")), k=3)
-        context_str = format_anomaly_context(history_list)
+        if settings.USE_CONTEXT:
+            history_list = get_anomaly_history(asset_id=str(state.get("asset_id")), k=3)
+            context_str = format_anomaly_context(history_list)
+            func_used = ['get_anomaly_history', 'format_anomaly_context']
+        else:
+            context_str =""
+            func_used = []
 
         # Format System Prompt
         sys_message = CLASSIFICATION_PROMPT_TEMPLATE.format(
@@ -156,7 +162,7 @@ def classifier_node(state: AgentState, config: RunnableConfig) -> AgentState:
             "tools_used": tools_used,
             "messages": ai_msg,
             "context": context_str,
-            "func_used":['get_anomaly_history', 'format_anomaly_context'],
+            "func_used":func_used,
             "error": None
         }
 
