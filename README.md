@@ -18,19 +18,20 @@ __[PDF Report](./report/Agentic_AI_System_Design_Report.pdf)__
 ## How to run the project
 - GitHub Link: https://github.com/umscai/zc06-agentic-ai-sys
 - The project __tested__ with Python version `3.13.14`, and __recommended__ to use python version `3.13 or above`
+- We used uv for easier and faster package management and virtual environment setting.
 
 1. __Clone__ the repo using the above link (if you have access), or unzip the provided compressed file.
-2. __Install__ dependencies using `pip install -r requirements.txt`, or if using uv: `uv add -r requirements.txt`
-3. __IMPORTANT-1__: run  `pip install -e .` or if using uv `uv pip install -e .`, to avoid path resolution especially for `.env` file
-4. __IMPORTANT-2__: This project depends on the parameters in .env located on the project root folder
-    - See instruction and required parameters in sample `.env` file: [sample.env](./sample.env)
-5. __Run__: `uv run agentic_system.py --asset 3 --test 1 --sample 2` or `python agentic_system.py --asset 3 --test 1 --sample 2`
-6. __Expected Results__:
+2. __Install__ dependencies using `uv add -r requirements.txt` (or `pip install -r requirements.txt` without uv)
+4. __IMPORTANT-1__: run  `uv pip install -e .`, to avoid path resolution especially for `.env` file
+5. __IMPORTANT-2__: This project depends on the parameters in .env located on the project root folder
+    - See instruction and required parameters in sample `.env` file: [sample.env](./sample.env), Updating `OPENAI_API_KEY` is __mandatory__, but other parameters are already set with intended values.
+6. __Run__: `uv run agentic_system.py --asset 3 --test 1 --sample 2`
+7. __Expected Results__:
 
 ![Sample-Run](./report/latex/img/sample-run.png)
 
 
-7. __Script Help__: `uv run agentic_system.py -h` or `uv run agentic_system.py --help`
+8. __Script Help__: `uv run agentic_system.py -h` or `uv run agentic_system.py --help`
 ```console
 max@m223:~/x/zc06-agentic-ai-sys$ uv run python agentic_system.py -h
 usage: agentic_system.py [-h] [-v] [-f {jsonl,txt}] [-a {1,2,3}] [-t {1,2,3,4}] [-s SAMPLES]
@@ -53,6 +54,15 @@ More details
 - test is the test-case number currently 1,2,3,4 (There are anomaly in case 1,2,3, but 4 is a place holder for extension, and currently is not anomaly)
 - number of samples is number of samples to generate between start and end values in the test case
 - test-case values (start and end, and the asset info) are saved in [test_case_and_asset_info.csv](./data/test_case_and_asset_info.csv)
+
+9. __Note__: We have one env variable in `.env` (see `sample.env`) called `USE_CONTEXT=1` to use Long-Term-Memory (LTM) anomaly history of the asset, we can manually set to zero to not using LTM and see agent response. We have `use_ltm.sh` linux bash script to change this variable instead of manually change it, just for easier test purpose as follow:
+```console
+# Set USE_CONTEXT=1 from command-line, then run agentic_system.py
+max@m223:~/x/zc06-agentic-ai-sys$ ./use_ltm.sh 1; uv run agentic_system.py --asset 1 --test 1 --sample 2
+
+# Set USE_CONTEXT=0 from command-line, then run agentic_system.py
+max@m223:~/x/zc06-agentic-ai-sys$ ./use_ltm.sh 0; uv run agentic_system.py --asset 1 --test 1 --sample 2
+```
 
 
 ## Folder and File Structure
