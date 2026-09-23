@@ -60,120 +60,254 @@
 %	\listoftables%\thispagestyle{fancy}
 	\newpage
 
-\section{ALL}
-We developed an agentic workflow~\parencites{agentic_Plaat_2025}{agentic_Hughes04072025} to classify pre-detected anomalies in industrial telemetry into three distinct operational response classes. The system identifies failure modes, performs root-cause analysis, suggests corrective actions, and automatically routes the incident to the appropriate tier for execution. Built using LangGraph~\parencite{langgraph_overview_2026}, the orchestration graph utilizes a \textbf{single} central LLM\footnote{Large Language Model}~\parencite{enwiki:LLM} at the core classifier node to manage reasoning as a ReAct\footnote{Reasoning and Acting}~\parencite{react} agent across the workflow.
+\section{Overview}
+We developed an agentic workflow~\parencites{agentic_Plaat_2025}{agentic_Hughes04072025} to classify pre-detected anomalies in industrial telemetry into three distinct operational response classes. The core system goal is to automate incident triage by identifying failure modes, conducting root-cause analysis, recommending corrective actions, and routing incidents to the appropriate operational tier for execution.
+
+Built using LangGraph~\parencite{langgraph_overview_2026}, the orchestration framework utilizes a single central Large Language Model (LLM)~\parencite{enwiki:LLM} acting as a ReAct (Reasoning and Acting) agent~\parencite{react} within the classifier node to manage workflow decisions.
 
 \subsection{Monitored Telemetry Parameters}
-The system evaluates four core telemetry metrics, representative of critical industrial assets like a Multistage Centrifugal Water Pump~\parencite{enwiki:cent-pump}:
+The system evaluates four core telemetry parameters representative of critical industrial assets, such as a Multistage Centrifugal Water Pump~\parencite{enwiki:cent-pump}:
 \begin{enumerate}[font=\large\color{red}]
-	\item \textbf{Temperature (temperature\_c):}  Monitored at bearings, lubrication loops, or process fluids to track thermal friction and cooling efficiency.
-	\item \textbf{Vibration (vibration\_hz):} Tracks mechanical oscillations to detect shaft misalignment, rotor imbalance, or bearing degradation.
-	\item \textbf{Pressure (pressure\_psi):}  Measures internal suction, discharge, or hydraulic line pressures.
-	\item \textbf{Power (power\_kw):} Tracks real-time electrical power consumption to evaluate motor load and overall efficiency.
+	\item \textbf{Temperature (\texttt{temperature\_c}):} Monitored at bearings, lubrication loops, or process fluids to track thermal friction and cooling efficiency.
+	\item \textbf{Vibration (\texttt{vibration\_hz}):} Tracks mechanical oscillations to detect shaft misalignment, rotor imbalance, or bearing degradation.
+	\item \textbf{Pressure (\texttt{pressure\_psi}):} Measures internal suction, discharge, or hydraulic line pressures.
+	\item \textbf{Power (\texttt{power\_kw}):} Tracks real-time electrical power consumption to evaluate motor load and overall efficiency.
 \end{enumerate}
 
-\subsection{Incident Severity Classification}
-\begin{enumerate}[font=\large\color{red}]\setcounter{enumi}{-1}
-	\item \textbf{CLASS\_0 (Immediate Shutdown):}  Catastrophic failure or severe danger requiring instant asset shutdown (Critical).
-	\item \textbf{CLASS\_1 (Automated Control):} Process drift or minor operational stress involving controllable single-telemetry anomalies (Moderate risk).
-	\item \textbf{CLASS\_2 (Escalate to Onsite Engineer):} Physical degradation or mechanical faults involving complex, multi-telemetry anomaly combinations (High risk).
-\end{enumerate}
 
-\subsection{Simplified Domain Grounding via Severity Bands}
-While a production deployment would ideally integrate Retrieval-Augmented Generation (RAG) using technical manuals, this implementation uses a deterministic threshold tool to convert raw numerical anomalies into standardized severity bands (Critically Low, Low, Normal, High, Critically High) as shown in Fig.~\ref{fig:sev-band}.
+\section{System Architecture and Design}
+
+\subsection{Workflow Graph}
+The agentic system's execution flow is modeled as a directed orchestration graph shown in Fig.~\ref{fig:graph}.
 
 \begin{figure}[!tbh]
 	\centering
-	\includegraphics[width=1.0\textwidth]{severity_bands.drawio}
+	\includegraphics[width=0.4\textwidth]{workflow-details.drawio}
+	\captionsetup{justification=centering}
+	\caption{Workflow Graph.}
+	\label{fig:graph}
+\end{figure}
+
+The execution sequence follows a multi-stage routing pipeline:
+\begin{enumerate}[font=\large\color{red}]
+	\item \textbf{Anomaly Detector Node:} Telemetry data enters the anomaly detector node and is logged to the telemetry database. If no anomaly is detected, the workflow terminates. If an anomaly is present, data is forwarded to the Classifier Agent.
+	\item \textbf{Classifier Agent Node:} Operates as a ReAct agent using few-shot prompting~\parencite{ibm:fewshot} with clearly defined response classes. Context is enriched using the 3 most recent anomaly records retrieved from Long-Term Memory (LTM)~\parencites{ibm:agent-mem}{mlm:agent-mem}. The agent utilizes a single tool to fetch standardized severity bands for the current asset.
+	\item \textbf{\texttt{CLASS\_0} Node:} Executes immediate asset shutdown protocols for critical safety hazards.
+	\item \textbf{\texttt{CLASS\_1} Node:} Triggers automated control adjustments (e.g., via Variable Frequency Drive) for controllable process drifts.
+	\item \textbf{\texttt{CLASS\_2} Node:} Escalate complex or unhandled anomalies by generating a comprehensive report for an on-site engineer.
+	\item \textbf{LTM Update Node:} Updates the Long-Term Memory database with event details across all anomaly paths.
+\end{enumerate}
+
+\subsection{Data Storage and Persistence Architecture}
+To maintain zero external deployment overhead while preserving operational isolation, the system employs three light-weight SQLite databases:
+\begin{itemize}
+	\item \textbf{Telemetry Database:} Stores continuous time-series logging of all incoming asset telemetry.
+	\item \textbf{Short-Term Memory (STM) Checkpoint Store:} Captures full state checkpoints for offline auditing, system analytics, and performance tracking.
+	\item \textbf{Long-Term Memory (LTM) Store:} Maintains a historical record of past anomaly events and resolutions per asset to provide historical context to the agent.
+	\item \textbf{System Logging:} The system logs (error, debug, warning, info) are saved in \textbf{JSONL} format for easy offline parsing.
+\end{itemize}
+\textit{Please see sample of log and databases in the notebook.}
+
+
+\subsection{Simplified Domain Grounding via Severity Bands}
+While a production system could integrate Retrieval-Augmented Generation (RAG)~\parencite{enwiki:rag} against technical manuals, this implementation uses a deterministic threshold tool to convert raw numerical anomalies into standardized severity bands (\textit{Critically Low, Low, Normal, High, Critically High}), as shown in Fig.~\ref{fig:sev-band}.
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=0.8\textwidth]{severity_bands.drawio}
 	\captionsetup{justification=centering}
 	\caption{Severity Bands.}
 	\label{fig:sev-band}
 \end{figure}
 
-Bypassing raw statistical metrics (e.g., standard deviations and means) prevents LLM hallucination and reasoning errors. This rule-based abstraction reflects practical engineering reality, where a variance of \textcolor{blue}{$10\sigma$} might represent a moderate operational shift in one metric(telemetry), but an immediate critical failure in another.
+Bypassing raw statistical metrics (e.g., standard deviations and means) inside the LLM prompt prevents hallucination and reasoning errors. This abstraction aligns with practical engineering realities where a deviation of $10\sigma$ might represent a minor operational shift in one parameter but an immediate catastrophic failure in another.
 
-\subsection{Anomaly Detector}
-It would be great to have a large dataset of the  real-world telemetry data labeled with normal and anomaly, and we could use Machine Leaning to build an anomaly detector. However in this project, this is not our goal, and we use a simple rule to detect anomaly data. As shown in Fig.~\ref{fig:sev-band}, we consider the full normal range as \textcolor{blue}{$6\sigma$} range with mean in the middle. Then if any telemetry is beyond  \textcolor{red}{$\pm4\sigma$} we consider it as anomaly. While the normal range is \textcolor{ForestGreen}{$\pm3\sigma$} , the gap ($[-4\sigma, -3\sigma]$ or $[+3\sigma, +4\sigma]$)  consider as tolerance beyond normal range before anomaly is reported.
-
-\subsection{Workflow Graph}
-The Graph for our agentic system is shown in Fig.~\ref{fig:graph}
-\begin{figure}[!tbh]
-	\centering
-	\includegraphics[width=0.5\textwidth]{workflow-details.drawio}
-	\captionsetup{justification=centering}
-	\caption{Workflow Graph.}
-	\label{fig:graph}
-\end{figure}
-\begin{enumerate}[font=\large\color{red}]
-	\item Telemetry data enter to anomaly detector node, it log to telemetry database, and if no anomaly detected, the workflow will end, otherwise it pass to the classifier Agent.
-	\item Classifier agent is using
-\end{enumerate}
-
-\subsection{Note for later}
-\begin{enumerate}
-	\item we use checkpoint for audit and analytics on tool and token usage, the accumulated messages here is not used in agent so we do not need, sliding window, truncation or summarization
-	\item Agent may need few previous long-term memory as context not the list of accumulated telemetry
-	\item the response time is important for this agent, and while we could let agent to read LTM, we keep it out of agent tools, and we only let agent use one tool call to get severity bands
-	\item class\_0 and class\_1 are clearly defined, and all other cases are escalate to human, as a future work we can add human in the loop for shutdown too, but if shutdown is critical may involving human delay the action, so it depends on the business if shutdown is too costly, and human decision is really needed
-	\item In reality when CLASS\_1 send control command for increasing or decreasing a telemetry we will have close loop control, and here we did not have any simulation for it, and can be a part of future work
-\end{enumerate}
-
-\subsection{summary from my notebook}
-1. We defined Norman and Anomaly Range
-2. We defined the agentic workflow with one ReAct-agent (with one tool) and other nodes (python function that can be extended with ReAct-agent if required)
-3. We define 3 assets (Multistage Centrifugal Water Pump) with their normal and anomaly ranges for 4 selected telemetries (temperature_c, vibration_hz,pressure_psi,power_kw)
-4. We define 3 anomaly cases per asset to cover all anomaly classes (CLASS_0: Immediate Shutdown, CLASS_1: Automatic Adjust, and CLASS_2: Escalate)
-5. We simulate each telemetry changes from start to end point, using sigmoid-like curve for better visual illustration (we can do linear change too, in our provided function)
-6. Generally we use 2 sample for test , first in normal range, and the second in anomaly range (we can select more sample and see behavior as illustrated)
-7. We tested all 9 test cases, with graph and snapshot of console, where all behave as expected
-8. We try to fill Long-Term Memory (LTM) with same anomaly failure of CLASS_1, and agent switch its behavior to CLASS_2 which make sense, if Control is not effective better to escalate
-9. Several day later we try same scenario again, and w expect to see CLASS_2, but agent tried CLASS_1 once then switch to CLASS_2, this might looks or considered as inconsistent decision by agent (specially with Temperature=0), but also can be consider smart decision that agent try to give a chance with automatic control then escalate again.
-10. Overall since we clearly mentioned in our prompt, all unclear scenario escalate to On-Site Engineer and agent will not take action
-11. We have 3 database (we used SQlite to make sure code is portable without requirement of additional setup for database)
-12. Telemetry database that log all telemetry data
-13. Short-Term Memory (STM) the checkpoint which mainly used for offline auditing and extracting analytic on tool/function calls and token usage
-14. Long-Term Memory (LTM) to provide anomaly history for each asset as the context for agent action
-15. Due to the nature of this work we did not need to use technique like sliding-window, summarization, or truncation on input messages to the agent, agent will take action on the current telemetry, plus the corresponding anomaly history ( generally last 3) from LTM which make the input (size) very controlled and deterministic.
-16. There are many area that it can be improve or extend in this project including:
-    - Use real dataset and develop a machine learning model for anomaly detection instead of simple python logic used in our anomaly detector
-    - Use real test-data for anomaly test, or build a generative-AI to generate anomaly and normal data for test
-    - We only use Variable Frequency Drive(VFD) for automatic control, while there are other parameter that can be controlled automatically (e,g. to reduce the pressure we may use opening a Bypass / Recirculation Valve)
-    - When we have automatic control, we can add close loop control, to simulate reducing or increasing parameter, so system and agent see the real effect of the action taken
-
-
-\section{Overview}
-Explain the agentic task, system goal, and overall approach.
-
-\section{System Architecture and Design}
-Describe the agent’s components, reasoning flow, memory handling, and tool use. Include or reference your architecture diagram.
 
 \section{Decision Logic and Behavior}
-Explain how the agent makes decisions and how it responds to different inputs or situations.
+
+\subsection{Anomaly Detection Logic}
+Rather than relying on complex machine learning models, the anomaly detection node utilizes a transparent statistical rule set defined around baseline Gaussian distributions:
+\begin{itemize}
+	\item The full normal operating range spans \textcolor{ForestGreen}{$\pm 3\sigma$} centered around the mean.	
+	\item An anomaly is flagged whenever any metric exceeds \textcolor{red}{$\pm 4\sigma$}.
+	\item The ranges $[-4\sigma, -3\sigma]$ and $[+3\sigma, +4\sigma]$ serve as operational tolerance buffers prior to reporting an anomaly.
+\end{itemize}
+
+\subsection{Incident Severity Classification}
+Once an anomaly is flagged, the central classifier agent categorizes the incident into one of three operational classes:
+\begin{enumerate}[font=\large\color{red}]\setcounter{enumi}{-1}
+	\item \textbf{\texttt{CLASS\_0} (Immediate Shutdown):} Triggered by severe threshold breaches (Critically High) on any dangerous parameter (temperature, pressure, or vibration) requiring instant asset shutdown to prevent catastrophic damage.
+	\item \textbf{\texttt{CLASS\_1} (Automated Control):} Triggered by minor single-parameter operational stress or controllable process drift solvable via automated actuators (e.g., VFD).
+	\item \textbf{\texttt{CLASS\_2} (Escalate to Onsite Engineer):} Triggered by physical degradation or complex multi-telemetry anomalies requiring physical inspection, maintenance, or manual intervention.
+\end{enumerate}
+
 
 \section{Safety, Reliability, and Transparency}
-Discuss safeguards, constraints, and design choices intended to improve reliability, interoperability, or transparency.
+
+\subsection{Context Window Control and Latency Optimization}
+Response latency is critical in industrial automation. To minimize inference delay, LTM access is kept outside the agent's tool execution loop; instead, relevant LTM context (the last 3 historical anomalies) is directly pre-loaded into the prompt before invocation.
+
+Furthermore, because state checkpoints in STM are reserved strictly for offline auditing and analytics, input context lengths remain deterministic. Complex context management techniques—such as sliding-window truncation or message summarization—are unnecessary, preventing context drop and ensuring consistent reasoning across runs.
+
+\subsection{System Observability and Analytics}
+The graph checkpointing mechanism captures system state after every node transition, enabling thorough post-hoc auditing. Figures~\ref{fig:analytics} illustrate the offline tracking metrics extracted from execution logs, covering LLM tool call frequencies, cumulative token consumption, and node execution profiles.
+
+\begin{figure}[H]
+\centering
+% Top subfigure
+\begin{subfigure}[b]{1.0\linewidth}
+	\centering
+	\includegraphics[height=0.30\textheight]{tool_usage.png}
+	%\caption{First subfigure caption}
+	%\label{fig:top_image}
+\end{subfigure}
+
+%\vspace{0.5cm} % Optional vertical space between figures
+
+% Bottom subfigure
+\begin{subfigure}[b]{1.0\linewidth}
+	\centering
+	\includegraphics[height=0.30\textheight]{token_usage.png}
+	%\caption{Second subfigure caption}
+	%\label{fig:bottom_image}
+\end{subfigure}
+
+\begin{subfigure}[b]{1.0\linewidth}
+	\centering
+	\includegraphics[height=0.30\textheight]{func_usage.png}
+	%\caption{Second subfigure caption}
+	%\label{fig:bottom_image}
+\end{subfigure}
+
+\caption{System Analytics: tool, token, and function usage.}
+\label{fig:analytics}
+\end{figure}
+
+%\begin{figure}[!tbh]
+%	\centering
+%	\includegraphics[width=\linewidth]{tool_usage.png}
+%	\caption{LLM-Agent Tool usage.}
+%	\label{fig:tool-usage}
+%\end{figure}
+%
+%\begin{figure}[!tbh]
+%	\centering
+%	\includegraphics[width=\linewidth]{token_usage.png}
+%	\caption{LLM-Agent Token usage.}
+%	\label{fig:token-usage}
+%\end{figure}
+%
+%\begin{figure}[!tbh]
+%	\centering
+%	\includegraphics[width=\linewidth]{func_usage.png}
+%	\caption{Workflow-node function-usage.}
+%	\label{fig:func-usage}
+%\end{figure}
+
 
 \section{Observed Behavior and Limitations}
-Analyze actual agent behavior based on your runs, including failure cases or limitations.
+
+\subsection{Experimental Evaluation and Sample Results}
+The framework was evaluated across 3 simulated centrifugal pump assets across 9 total test scenarios (3 anomaly cases per asset). Telemetry trends were simulated using sigmoid-like curve transitions for realistic parameter drift. Across baseline runs, the system executed expected actions across all classes, as illustrated in Fig.~\ref{fig:class0} (\texttt{CLASS\_0}), Fig.~\ref{fig:class1} (\texttt{CLASS\_1}), and Fig.~\ref{fig:class2} (\texttt{CLASS\_2}).
+
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a1t3.png}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a1t3s2.png}
+	\end{subfigure}
+	\caption{Sample test-case for anomaly \texttt{CLASS\_0}.}
+	\label{fig:class0}
+\end{figure}
+
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t2.png}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t2s2.png}
+	\end{subfigure}
+	\caption{Sample test-case for anomaly \texttt{CLASS\_1}.}
+	\label{fig:class1}
+\end{figure}
+
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t2.png}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t2s2.png}
+	\end{subfigure}
+	\caption{Sample test-case for anomaly \texttt{CLASS\_2}.}
+	\label{fig:class2}
+\end{figure}
+
+\subsection{LTM-Driven Behavioral Adaptation and Inconsistencies}
+To assess the impact of Long-Term Memory, a \texttt{CLASS\_1} candidate scenario was evaluated under different LTM states:
+\begin{itemize}
+	\item \textbf{Without LTM:} The agent consistently routed the event to \texttt{CLASS\_1} for automated adjustment (Fig.~\ref{fig:class1-no-ltm}).
+	\item \textbf{With LTM (Identical Past Failures Loaded):} Upon observing in LTM that prior automated adjustments had failed to clear the anomaly, the agent adapted its behavior and escalated the event to \texttt{CLASS\_2} (Fig.~\ref{fig:class1-ltm}).
+	\item \textbf{Repeated Run After Time Delay:} In subsequent runs, the agent attempted an automated control intervention (\texttt{CLASS\_1}) once before re-escalating to \texttt{CLASS\_2} on the next occurrence (Fig.~\ref{fig:class1-ltm-again}).
+\end{itemize}
+
+While this shift demonstrates adaptive decision-making (giving automated control a secondary trial before escalating), it also highlights potential non-deterministic reasoning in LLM-based controllers.
+
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t3.png}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t3s2_no_ltm.png}
+	\end{subfigure}
+	\caption{Sample test-case (Asset 3, Test 3) for anomaly \texttt{CLASS\_1} without LTM.}
+	\label{fig:class1-no-ltm}
+\end{figure}
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=\linewidth]{a3t3s2.png}
+	\caption{Sample test-case (Asset 3, Test 3) for anomaly \texttt{CLASS\_1} using LTM.}
+	\label{fig:class1-ltm}
+\end{figure}
+
+\begin{figure}[!tbh]
+	\centering
+	\includegraphics[width=\linewidth]{a3t3s2-ltm1-class-1-class-2.png}
+	\caption{Repeat after several days: Sample test-case (Asset 3, Test 3) using LTM.}
+	\label{fig:class1-ltm-again}
+\end{figure}
+
 
 \section{Ethical and Responsible Use Considerations}
-Identify at least one ethical concern related to autonomy, misuse, bias, accountability, or societal impact, grounded in your system’s design and behavior.
+Automating control decisions and emergency shutdowns in industrial physical infrastructure introduces significant operational risks. Granting autonomous agents direct execution authority over \texttt{CLASS\_0} emergency shutdowns poses a trade-off:
+\begin{itemize}
+	\item \textbf{Safety vs. Financial Cost:} An automated emergency shutdown prevents catastrophic physical failure, protecting personnel and infrastructure. However, false positives cause expensive, unnecessary production halts.
+	\item \textbf{Accountability and Delays:} Requiring a Human-in-the-Loop (HITL) for critical shutdowns mitigates false-positive costs but introduces latency that may lead to physical destruction during fast-moving failure modes.
+\end{itemize}
+
 
 \section{Future Improvements}
-Describe realistic next steps that could improve robustness, safety, or capability.
-
-
-%---------------------------------------
-Citation Requirements
-\parencite{enwiki:dev-cent-pump}
-Use citations when:
-
-    Defining agentic AI concepts or architectures
-    Justifying design patterns or safeguards
-    Discussing ethical, governance, or responsible-use considerations
-
-Do not cite your own code or execution outputs.
-% apa does not include ref and appx in TOC we forced it
+To address present system limitations, future development will target the following areas:
+\begin{enumerate}
+	\item \textbf{Machine Learning Anomaly Detection:} Replace rule-based deviation bounds with trained machine learning models fitted on historical industrial telemetry.
+	\item \textbf{Generative Data Pipelines:} Integrate Generative AI models to synthesize diverse normal and rare failure-mode telemetry for robust benchmark testing.
+	\item \textbf{Expanded Actuator Integration:} Extend control capability beyond Variable Frequency Drives (VFDs) to include actuators like bypass and recirculation valves.
+	\item \textbf{Closed-Loop Simulation:} Implement continuous closed-loop feedback environments to dynamically evaluate asset recovery following agent-initiated control adjustments.
+	\item \textbf{Configurable Safety Guards:} Incorporate optional Human-in-the-Loop approval nodes for emergency shutdowns based on facility-specific risk profiles.
+\end{enumerate}% apa does not include ref and appx in TOC we forced it
 \phantomsection % Ensures hyperref links to the correct page
 \addcontentsline{toc}{section}{References}
 \printbibliography %[heading=none] % Removes default unnumbered header so it doesn't double-up
