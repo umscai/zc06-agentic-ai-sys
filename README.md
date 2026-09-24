@@ -16,19 +16,29 @@ This project introduces a **LangGraph-driven agentic system** that automatically
 __[PDF Report](./report/Agentic_AI_System_Design_Report.pdf)__
 
 ## How to run the project
+### Quick-Step
+```console
+#clone or unzip the project, cd to the project
+max@m223:~/x/tmp/zc06-agentic-ai-sys$ uv init --python 3.13
+max@m223:~/x/tmp/zc06-agentic-ai-sys$ uv add -r requirements.txt
+max@m223:~/x/tmp/zc06-agentic-ai-sys$ uv pip install -e .
+#copy sample.env as .env and update OPENAI_API_KEY, (and OPENAI_BASE_URL if required)
+max@m223:~/x/tmp/zc06-agentic-ai-sys$ uv run agentic_system.py --asset 3 --test 1 --sample 2
+```
+### Details
 - GitHub Link: https://github.com/umscai/zc06-agentic-ai-sys
 - The project __tested__ with Python version `3.13.14`, and __recommended__ to use python version `3.13 or above`
 - We used uv for easier and faster package management and virtual environment setting.
 
 1. __Clone__ the repo using the above link (if you have access), or unzip the provided compressed file.
-2. __Install__ dependencies using `uv add -r requirements.txt` (or `pip install -r requirements.txt` without uv)
+2. __Install__ dependencies using `uv add -r requirements.txt`
 4. __IMPORTANT-1__: run  `uv pip install -e .`, to avoid path resolution especially for `.env` file
 5. __IMPORTANT-2__: This project depends on the parameters in .env located on the project root folder
-    - See instruction and required parameters in sample `.env` file: [sample.env](./sample.env), Updating `OPENAI_API_KEY` is __mandatory__, but other parameters are already set with intended values.
+    - See instruction and required parameters in sample `.env` file: [sample.env](./sample.env), Updating `OPENAI_API_KEY` is __mandatory__, OPENAI_BASE_UR if required, and other parameters are already set with intended values.
 6. __Run__: `uv run agentic_system.py --asset 3 --test 1 --sample 2`
-7. __Expected Results__:
+7. __Expected Results__: (note, when it's the first run, all required folder and databases will be created)
 
-![Sample-Run](./report/latex/img/sample-run.png)
+![Sample-Run](./report/latex/img/sample-first-run.png)
 
 
 8. __Script Help__: `uv run agentic_system.py -h` or `uv run agentic_system.py --help`
@@ -66,17 +76,15 @@ max@m223:~/x/zc06-agentic-ai-sys$ ./use_ltm.sh 0; uv run agentic_system.py --ass
 
 
 ## Folder and File Structure
-Project folder and file structures are shown below, where `agentic_system.py` is main script, and all supporting functions collected `src`, and `out` folder will be generated with shown structures for 3 used databases and the log files while `data` folder is devoted to asset and test-case info, and `report` folder contains report related files, while pdf report will be in details, result are also collected in the a `test_result.ipynb` under `notebook` folder for quick review.
+Project folder and file structures are shown below, where `agentic_system.py` is main script, and all supporting functions collected `src`, and `out` folder will be generated (after first run) with shown structures for 3 used databases and the log files while `data` folder is devoted to asset and test-case info, and `report` folder contains report related files, while pdf report will be in details, result are also collected in the a `test_result.ipynb` under `notebook` folder for quick review.
 
-```console
-├max@m223:~/x/tmp/zc06test$ tree -L 3
-.
+```console.
 ├── agentic_system.py
 ├── data
 │   ├── test_case_and_asset_info_colored.xlsx
 │   └── test_case_and_asset_info.csv
 ├── LICENSE
-├── main.py
+├── Makefile
 ├── minimal_req.ini
 ├── notebook
 │   └── test_result.ipynb
@@ -89,11 +97,14 @@ Project folder and file structures are shown below, where `agentic_system.py` is
 │   │   └── telemetry.db
 │   └── logs
 │       └── log.jsonl
+├── pyproject.toml
 ├── README.md
 ├── report
-│   ├── latex
-│   │   └── img
 │   ├── Agentic_AI_System_Design_Report.pdf
+│   ├── latex
+│   │   ├── img
+│   │   ├── ref
+│   │   └── tex
 │   └── test_result.html
 ├── requirements.txt
 ├── sample.env
@@ -122,9 +133,13 @@ Project folder and file structures are shown below, where `agentic_system.py` is
 │   │   ├── ltm_db_tools.py
 │   │   ├── severity_bands_tools.py
 │   │   └── telemetry_db_tools.py
-│   └── utils.py
-└── use_ltm.sh
+│   ├── utils.py
+│   └── zc06_agentic_ai_sys
+│       └── __init__.py
+├── use_ltm.sh
+└── uv.lock
 ```
+
 
 # Normal and Anomaly Region
 ![Severity-Bands](./report/latex/img/severity_bands.drawio.png)
