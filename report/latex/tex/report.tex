@@ -57,7 +57,7 @@
 	\tableofcontents
 	\newpage
 	\listoffigures%\thispagestyle{fancy}
-%	\listoftables%\thispagestyle{fancy}
+	\listoftables%\thispagestyle{fancy}
 	\newpage
 
 \section{Overview}
@@ -93,7 +93,7 @@ The execution sequence follows a multi-stage routing pipeline:
 	\item \textbf{Anomaly Detector Node:} Telemetry data enters the anomaly detector node and is logged to the telemetry database. If no anomaly is detected, the workflow terminates. If an anomaly is present, data is forwarded to the Classifier Agent.
 	\item \textbf{Classifier Agent Node:} Operates as a ReAct agent using few-shot prompting~\parencite{ibm:fewshot} with clearly defined response classes. Context is enriched using the 3 most recent anomaly records retrieved from Long-Term Memory (LTM)~\parencites{ibm:agent-mem}{mlm:agent-mem}. The agent utilizes a single tool to fetch standardized severity bands for the current asset.
 	\item \textbf{\texttt{CLASS\_0} Node:} Executes immediate asset shutdown protocols for critical safety hazards.
-	\item \textbf{\texttt{CLASS\_1} Node:} Triggers automated control adjustments (e.g., via Variable Frequency Drive) for controllable process drifts.
+	\item \textbf{\texttt{CLASS\_1} Node:} Triggers automated control adjustments (e.g., via Variable Frequency Drive(VFD)~\parencite{enwiki:vfd}) for controllable process drifts.
 	\item \textbf{\texttt{CLASS\_2} Node:} Escalate complex or unhandled anomalies by generating a comprehensive report for an on-site engineer.
 	\item \textbf{LTM Update Node:} Updates the Long-Term Memory database with event details across all anomaly paths.
 \end{enumerate}
@@ -104,7 +104,7 @@ To maintain zero external deployment overhead while preserving operational isola
 	\item \textbf{Telemetry Database:} Stores continuous time-series logging of all incoming asset telemetry.
 	\item \textbf{Short-Term Memory (STM) Checkpoint Store:} Captures full state checkpoints for offline auditing, system analytics, and performance tracking.
 	\item \textbf{Long-Term Memory (LTM) Store:} Maintains a historical record of past anomaly events and resolutions per asset to provide historical context to the agent.
-	\item \textbf{System Logging:} The system logs (error, debug, warning, info) are saved in \textbf{JSONL} format for easy offline parsing.
+	\item \textbf{System Logging:} The system logs (error, debug, warning, info) are saved in \textbf{JSONL} format for easy offline parsing, and troubleshooting.
 \end{itemize}
 \textit{Please see sample of log and databases in the notebook.}
 
@@ -120,25 +120,25 @@ While a production system could integrate Retrieval-Augmented Generation (RAG)~\
 	\label{fig:sev-band}
 \end{figure}
 
-Bypassing raw statistical metrics (e.g., standard deviations and means) inside the LLM prompt prevents hallucination and reasoning errors. This abstraction aligns with practical engineering realities where a deviation of $10\sigma$ might represent a minor operational shift in one parameter but an immediate catastrophic failure in another.
+Bypassing raw statistical metrics (e.g., standard deviations and means) inside the LLM prompt prevents hallucination and reasoning errors. This abstraction aligns with practical engineering realities where a deviation of  \textcolor{red}{$10\sigma$} might represent a tolerable operational shift in one parameter but an immediate catastrophic failure in another.
 
 
 \section{Decision Logic and Behavior}
 
 \subsection{Anomaly Detection Logic}
-Rather than relying on complex machine learning models, the anomaly detection node utilizes a transparent statistical rule set defined around baseline Gaussian distributions:
+Rather than relying on complex machine learning models, the anomaly detection node utilizes a transparent statistical rule set defined around baseline as follow (not necessarily a perfect Gaussian distributions):
 \begin{itemize}
 	\item The full normal operating range spans \textcolor{ForestGreen}{$\pm 3\sigma$} centered around the mean.	
 	\item An anomaly is flagged whenever any metric exceeds \textcolor{red}{$\pm 4\sigma$}.
-	\item The ranges $[-4\sigma, -3\sigma]$ and $[+3\sigma, +4\sigma]$ serve as operational tolerance buffers prior to reporting an anomaly.
+	\item The ranges \textcolor{RoyalBlue}{$[-4\sigma, -3\sigma]$} and \textcolor{RoyalBlue}{$[+3\sigma, +4\sigma]$} serve as operational tolerance buffers prior to reporting an anomaly.
 \end{itemize}
 
 \subsection{Incident Severity Classification}
 Once an anomaly is flagged, the central classifier agent categorizes the incident into one of three operational classes:
 \begin{enumerate}[font=\large\color{red}]\setcounter{enumi}{-1}
 	\item \textbf{\texttt{CLASS\_0} (Immediate Shutdown):} Triggered by severe threshold breaches (Critically High) on any dangerous parameter (temperature, pressure, or vibration) requiring instant asset shutdown to prevent catastrophic damage.
-	\item \textbf{\texttt{CLASS\_1} (Automated Control):} Triggered by minor single-parameter operational stress or controllable process drift solvable via automated actuators (e.g., VFD).
-	\item \textbf{\texttt{CLASS\_2} (Escalate to Onsite Engineer):} Triggered by physical degradation or complex multi-telemetry anomalies requiring physical inspection, maintenance, or manual intervention.
+	\item \textbf{\texttt{CLASS\_1} (Automated Control):} Triggered by minor single-parameter operational stress or controllable process drift solvable via automated actuators (e.g. VFD).
+	\item \textbf{\texttt{CLASS\_2} (Escalate to Onsite Engineer):} Triggered by physical degradation or complex multi-telemetry anomalies requiring physical inspection, maintenance, or manual intervention (all cases not fall in CLASS\_0 or CLASS\_1).
 \end{enumerate}
 
 
@@ -147,10 +147,10 @@ Once an anomaly is flagged, the central classifier agent categorizes the inciden
 \subsection{Context Window Control and Latency Optimization}
 Response latency is critical in industrial automation. To minimize inference delay, LTM access is kept outside the agent's tool execution loop; instead, relevant LTM context (the last 3 historical anomalies) is directly pre-loaded into the prompt before invocation.
 
-Furthermore, because state checkpoints in STM are reserved strictly for offline auditing and analytics, input context lengths remain deterministic. Complex context management techniques—such as sliding-window truncation or message summarization—are unnecessary, preventing context drop and ensuring consistent reasoning across runs.
+Furthermore, because state checkpoints in STM are reserved strictly for offline auditing and analytics, input context lengths remain deterministic. Complex context management techniques~\parencite{mlm:context-mgm}—such as sliding-window truncation or message summarization—are unnecessary, preventing context drop and ensuring consistent reasoning across runs.
 
 \subsection{System Observability and Analytics}
-The graph checkpointing mechanism captures system state after every node transition, enabling thorough post-hoc auditing. Figures~\ref{fig:analytics} illustrate the offline tracking metrics extracted from execution logs, covering LLM tool call frequencies, cumulative token consumption, and node execution profiles.
+The graph checkpointing mechanism captures system state after every node transition, enabling thorough post-hoc auditing. Figures~\ref{fig:analytics} illustrate the offline tracking metrics extracted from checkpoint store, covering LLM tool call frequencies, cumulative token consumption, and node execution profiles (python function usage).
 
 \begin{figure}[H]
 \centering
@@ -208,7 +208,7 @@ The graph checkpointing mechanism captures system state after every node transit
 \section{Observed Behavior and Limitations}
 
 \subsection{Experimental Evaluation and Sample Results}
-The framework was evaluated across 3 simulated centrifugal pump assets across 9 total test scenarios (3 anomaly cases per asset). Telemetry trends were simulated using sigmoid-like curve transitions for realistic parameter drift. Across baseline runs, the system executed expected actions across all classes, as illustrated in Fig.~\ref{fig:class0} (\texttt{CLASS\_0}), Fig.~\ref{fig:class1} (\texttt{CLASS\_1}), and Fig.~\ref{fig:class2} (\texttt{CLASS\_2}).
+The framework was evaluated across 3 simulated centrifugal pump assets across 9 total test scenarios (see notebook for all results, and details in \nameref{app:a}). Telemetry trends were simulated using sigmoid-like curve transitions for realistic parameter drift. Across baseline runs, the system executed expected actions across all classes, as illustrated in Fig.~\ref{fig:class0} (\texttt{CLASS\_0}), Fig.~\ref{fig:class1} (\texttt{CLASS\_1}), and Fig.~\ref{fig:class2} (\texttt{CLASS\_2}).
 
 \begin{figure}[!htbp]
 	\centering
@@ -286,11 +286,11 @@ While this shift demonstrates adaptive decision-making (giving automated control
 \begin{figure}[!tbh]
 	\centering
 	\includegraphics[width=\linewidth]{a3t3s2-ltm1-class-1-class-2.png}
-	\caption{Repeat after several days: Sample test-case (Asset 3, Test 3) using LTM.}
+	\caption{Sample test-case (Asset 3, Test 3) using LTM (Repeat after several days).}
 	\label{fig:class1-ltm-again}
 \end{figure}
 
-
+\newpage
 \section{Ethical and Responsible Use Considerations}
 Automating control decisions and emergency shutdowns in industrial physical infrastructure introduces significant operational risks. Granting autonomous agents direct execution authority over \texttt{CLASS\_0} emergency shutdowns poses a trade-off:
 \begin{itemize}
@@ -312,15 +312,118 @@ To address present system limitations, future development will target the follow
 \addcontentsline{toc}{section}{References}
 \printbibliography %[heading=none] % Removes default unnumbered header so it doesn't double-up
 
-% Appendices start here (AFTER references)
-%\appendix
-%\phantomsection
-%\addcontentsline{toc}{section}{Appendix A: Evaluation Metrics for Binary Classification}
-%\section{Appendix A: Evaluation Metrics for Binary Classification}\label{app:a}
+ %Appendices start here (AFTER references)
+\appendix
+\phantomsection
+\addcontentsline{toc}{section}{Appendix A: Asset and Test-case Info}
+\section{Appendix A: Asset and Test-case Info}\label{app:a}
+Table~\ref{tab:asset}  shows severity bands thresholds for 3 assets used in this project, these thresholds will determin the normal and anomaly region as shown in Fig.~\ref{fig:sev-band} .
+\begin{table}[!htb]
+	\centering
+	\caption{Asset Severity Band  Thresholds.}
+	\label{tab:asset}
+	\begin{tabular}{cccccc}
+		\toprule
+		\textbf{asset\_index} & \textbf{parameter} & \textbf{low\_min} & \textbf{normal\_min} & \textbf{normal\_max} & \textbf{high\_max} \\
+		\hline\hline
+		1 & temperature\_c & 40 & 48 & 62 & 80 \\
+		1 & vibration\_hz & 15 & 20 & 32 & 44 \\
+		1 & pressure\_psi & 80 & 111 & 130 & 160 \\
+		1 & power\_kw & 30 & 42 & 52 & 60 \\		
+		\hline\hline
+		2 & temperature\_c & 41 & 49 & 63 & 81 \\
+		2 & vibration\_hz & 16 & 21 & 33 & 45 \\
+		2 & pressure\_psi & 81 & 112 & 131 & 161 \\
+		2 & power\_kw & 31 & 43 & 53 & 61 \\		
+		\midrule\midrule
+		3 & temperature\_c & 43 & 51 & 65 & 83 \\
+		3 & vibration\_hz & 18 & 23 & 35 & 47 \\
+		3 & pressure\_psi & 82 & 114 & 133 & 163 \\
+		3 & power\_kw & 33 & 45 & 55 & 63 \\		
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Table~\ref{tab:test} shows the test-case data (3 cases per asset, total 9 scenarios). Each test case defined by start and end values for all 4 telemetry. we use starting point in normal range, and the end point somewhere in anomaly region.  For simulation and test these two points are enough, but we can create a trend between these two points and send all of them to the model for evaluation, For example using asset-3 with test case-1, and 5 samples shown in Fig.~\ref{fig:sample5}, where we can see:
+\begin{itemize}
+	\item All telemetry except pressure are within normal range.
+	\item First 2 samples of pressure are in normal range.
+	\item 3rd sample is high-pressure which is CLASS\_1  anomaly as detected by Agent.
+	\item 4th and 5th samples are critically high which is CLASS\_0 as detected by Agent.
+\end{itemize} 
+
+\begin{table}[!htb]
+	\centering
+	\caption{Test Cases Data}
+	\label{tab:test}
+	\begin{tabular}{cccccccc}
+		\toprule
+		\textbf{asset\_index} & \textbf{parameter} & \textbf{start1} & \textbf{end1} & \textbf{start2} & \textbf{end2} & \textbf{start3} & \textbf{end3} \\
+		\hline\hline
+		1 & temperature\_c & 50 & \textcolor{red}{70} & 50 & \textcolor{red}{79} & 50 & \textcolor{red}{90} \\
+		1 & vibration\_hz & 22 & 29 & 22 & 29 & 22 & 29 \\
+		1 & pressure\_psi & 114 & 125 & 114 & \textcolor{red}{135} & 114 & 125 \\
+		1 & power\_kw & 44 & 48 & 44 & 48 & 44 & 48 \\		
+		\hline\hline
+		2 & temperature\_c & 51 & 60 & 51 & 60 & 51 & 60 \\
+		2 & vibration\_hz & 23 & \textcolor{red}{35} & 23 & \textcolor{red}{40} & 23 & \textcolor{red}{50} \\
+		2 & pressure\_psi & 116 & 129 & 116 & \textcolor{red}{140} & 116 & 129 \\
+		2 & power\_kw & 45 & 49 & 45 & 49 & 45 & 49 \\		
+		\hline\hline
+		3 & temperature\_c & 52 & 60 & 52 & 60 & 52 & 60 \\
+		3 & vibration\_hz & 25 & 31 & 25 & 31 & 25 & 31 \\
+		3 & pressure\_psi & 117 & \textcolor{red}{180} & 117 & \textcolor{orange}{100} & 117 & 128 \\
+		3 & power\_kw & 46 & 50 & 46 & 50 & 46 & \textcolor{red}{60} \\		
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\newpage
+
+\begin{figure}[!htbp]
+	\centering
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t1_5samples.png}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.9\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{a3t1s5.png}
+	\end{subfigure}
+	\caption{Sample test-case with 5 samples.}
+	\label{fig:sample5}
+\end{figure}
+
+%\begin{table}[htbp]
+%	\centering
+%	\begin{tabular}{cccccccccccccc}
+	%		\hline
+	%		asset\_index & parameter & low\_min & normal\_min & normal\_max & high\_max & start1 & end1 & start2 & end2 & start3 & end3 & start4 & end4 \\
+	%		\hline
+	%		1 & temperature\_c & 40 & 48 & 62 & 80 & 50 & 70 & 50 & 79 & 50 & 90 & 50 & 59 \\
+	%		1 & vibration\_hz & 15 & 20 & 32 & 44 & 22 & 29 & 22 & 29 & 22 & 29 & 22 & 29 \\
+	%		1 & pressure\_psi & 80 & 111 & 130 & 160 & 114 & 125 & 114 & 135 & 114 & 125 & 114 & 125 \\
+	%		1 & power\_kw & 30 & 42 & 52 & 60 & 44 & 48 & 44 & 48 & 44 & 48 & 44 & 48 \\
+	%		0 & p & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+	%		\hline
+	%		2 & temperature\_c & 41 & 49 & 63 & 81 & 51 & 60 & 51 & 60 & 51 & 60 & 51 & 60 \\
+	%		2 & vibration\_hz & 16 & 21 & 33 & 45 & 23 & 35 & 23 & 40 & 23 & 50 & 23 & 30 \\
+	%		2 & pressure\_psi & 81 & 112 & 131 & 161 & 116 & 129 & 116 & 140 & 116 & 129 & 116 & 129 \\
+	%		2 & power\_kw & 31 & 43 & 53 & 61 & 45 & 49 & 45 & 49 & 45 & 49 & 45 & 49 \\
+	%		0 & p & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+	%		\hline
+	%		3 & temperature\_c & 43 & 51 & 65 & 83 & 52 & 60 & 52 & 60 & 52 & 60 & 52 & 60 \\
+	%		3 & vibration\_hz & 18 & 23 & 35 & 47 & 25 & 31 & 25 & 31 & 25 & 31 & 25 & 31 \\
+	%		3 & pressure\_psi & 82 & 114 & 133 & 163 & 117 & 180 & 117 & 100 & 117 & 128 & 117 & 128 \\
+	%		3 & power\_kw & 33 & 45 & 55 & 63 & 46 & 50 & 46 & 50 & 46 & 60 & 46 & 50 \\
+	%		0 & p & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+	%		\hline
+	%	\end{tabular}
+%\end{table}
+
 %\subsection{ELBO}
-%Well,
 %\newpage
-%
+
 %\phantomsection
 %\addcontentsline{toc}{section}{Appendix B: XXX}
 %\section{Appendix B: XXX}
