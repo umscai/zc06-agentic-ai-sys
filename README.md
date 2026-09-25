@@ -13,7 +13,7 @@ This project introduces a **LangGraph-driven agentic system** that automatically
 3. **Streamlined Architecture:** Replaces heavy RAG pipelines with targeted threshold lookup tools to give the LLM unambiguous domain context for reliable classification (Each Telemetry mapped to '`Critically_Low`, `Low`, `Normal`, `High` or `Critically_High`, based on clear threshold defined for each asset).
 
 
-__[PDF Report](./report/Agentic_AI_System_Design_Report.pdf)__
+__[PDF Report](./report/report.pdf)__
 
 ## How to run the project
 ### Quick-Step
@@ -100,7 +100,7 @@ Project folder and file structures are shown below, where `agentic_system.py` is
 ├── pyproject.toml
 ├── README.md
 ├── report
-│   ├── Agentic_AI_System_Design_Report.pdf
+│   ├── report.pdf
 │   ├── latex
 │   │   ├── img
 │   │   ├── ref
